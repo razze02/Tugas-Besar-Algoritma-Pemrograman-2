@@ -45,18 +45,22 @@ func main() {
 			fmt.Println("Opsi Tidak Valid")
 		}
 	}
-	fmt.Println("Terimakasih")
 }
 
 func ratingfilm(a *datafilm, n int) {
 	var targetfilm string
 	var ratingtambahan float64
 	var ketemu bool
-
-	fmt.Print("Cari judul film: ")
+	fmt.Println("Cari judul film (Ketik 0 untuk kembali): ")
 	fmt.Scan(&targetfilm)
 
+	if targetfilm == "0" {
+		fmt.Println("Kembali ke menu utama")
+		return
+	}
+
 	for i := 0; i < n; i++ {
+		//sequential search//
 		if a[i].judul == targetfilm {
 			fmt.Print("Berikan Rating: ")
 			fmt.Scan(&ratingtambahan)
@@ -73,24 +77,50 @@ func ratingfilm(a *datafilm, n int) {
 	}
 }
 
+func sortJudulAscending(a *datafilm, n int) {
+	for i := 1; i < n; i++ {
+		key := a[i]
+		j := i - 1
+		for j >= 0 && a[j].judul > key.judul {
+			a[j+1] = a[j]
+			j = j - 1
+		}
+		a[j+1] = key
+	}
+}
+
 func carifilm(a *datafilm, n *int) {
 	var targetfilm, filmtambahan string
 	var ketemu bool
-	var opsi int
+	var opsi, indexKetemu int
 	var ratingtambahan float64
-
-	fmt.Print("Cari Film: ")
+	fmt.Print("Cari Film (Ketik 0 untuk kembali): ")
 	fmt.Scan(&targetfilm)
 
-	for i := 0; i < *n; i++ {
-		if a[i].judul == targetfilm {
-			fmt.Printf("%s %.1f(%d)\n\n", a[i].judul, a[i].rating, a[i].jmlrating)
+	if targetfilm == "0" {
+		fmt.Println("Kembali ke menu utama")
+		return
+	}
+
+	sortJudulAscending(a, *n)
+	low := 0
+	high := *n - 1
+	//binary search//
+	for low <= high {
+		mid := (low + high) / 2
+		if a[mid].judul == targetfilm {
 			ketemu = true
-			i = *n
+			indexKetemu = mid
+			low = high + 1
+		} else if a[mid].judul < targetfilm {
+			low = mid + 1
+		} else {
+			high = mid - 1
 		}
 	}
 
 	if ketemu {
+		fmt.Printf("%s %.1f(%d)\n\n", a[indexKetemu].judul, a[indexKetemu].rating, a[indexKetemu].jmlrating)
 		fmt.Println("Film Ditemukan")
 		fmt.Printf("1. Cari Film Lain\n2. Kembali Ke Menu\n")
 		fmt.Print("Pilih Opsi: ")
@@ -106,14 +136,18 @@ func carifilm(a *datafilm, n *int) {
 		fmt.Scan(&opsi)
 		fmt.Println("")
 		if opsi == 1 {
-			fmt.Print("Masukan Judul: ")
+			fmt.Print("Masukan Judul (Ketik 0 untuk batal): ")
 			fmt.Scan(&filmtambahan)
-			a[*n].judul = filmtambahan
+
+			if filmtambahan == "0" {
+				fmt.Println("Batal menambahkan film.")
+				return
+			}
 
 			fmt.Print("Masukan Rating: ")
 			fmt.Scan(&ratingtambahan)
+			a[*n].judul = filmtambahan
 			a[*n].rating = ratingtambahan
-
 			a[*n].jmlrating = 1
 			*n++
 			fmt.Println("Film berhasil ditambahkan")
@@ -123,26 +157,27 @@ func carifilm(a *datafilm, n *int) {
 
 func sortfilm(a datafilm, n int) {
 	var datasort datafilm = a
-	var opsi, max, min int
+	var opsi, min int
 	var temp film
-
-	fmt.Printf("1. Rating Tertinggi\n2. Rating Terendah\n3. Menu\n")
+	fmt.Printf("1. Rating Tertinggi\n2. Rating Terendah\n0. Kembali Ke Menu\n")
 	fmt.Print("Pilih Opsi: ")
 	fmt.Scan(&opsi)
 	fmt.Println("")
+	if opsi == 0 {
+		return
+	}
 
 	switch opsi {
 	case 1:
-		for i := 0; i < n-1; i++ {
-			max = i
-			for j := i + 1; j < n; j++ {
-				if datasort[max].rating < datasort[j].rating || (datasort[max].rating == datasort[j].rating && datasort[max].jmlrating < datasort[j].jmlrating) {
-					max = j
-				}
+		//insertion sort//
+		for i := 1; i < n; i++ {
+			key := datasort[i]
+			j := i - 1
+			for j >= 0 && (datasort[j].rating < key.rating || (datasort[j].rating == key.rating && datasort[j].jmlrating < key.jmlrating)) {
+				datasort[j+1] = datasort[j]
+				j = j - 1
 			}
-			temp = datasort[i]
-			datasort[i] = datasort[max]
-			datasort[max] = temp
+			datasort[j+1] = key
 		}
 		fmt.Println("--- TOP FILM (RATING TERTINGGI) ---")
 		for i := 0; i < n; i++ {
@@ -150,6 +185,7 @@ func sortfilm(a datafilm, n int) {
 		}
 		fmt.Println("")
 	case 2:
+		//selection sort//
 		for i := 0; i < n-1; i++ {
 			min = i
 			for j := i + 1; j < n; j++ {
@@ -166,8 +202,6 @@ func sortfilm(a datafilm, n int) {
 			fmt.Printf("%-4d %-50s %.1f(%d rating)\n", i+1, datasort[i].judul, datasort[i].rating, datasort[i].jmlrating)
 		}
 		fmt.Println("")
-	case 3:
-		return
 	default:
 		fmt.Println("Opsi tidak Valid")
 	}
